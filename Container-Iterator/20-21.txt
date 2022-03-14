@@ -1,0 +1,19 @@
+
+Inserting a node!
+- in the container iterator
+
+temp->next = ptr->next;
+temp->prev = ptr;
+ptr->next->prev = temp;
+ptr->next = temp;
+
+Removing a Node!
+ptr->next->prev = ptr->prev;
+ptr->prev->next = ptr->next;
+delete ptr;
+
+
+List & ltr
+
+List<int> lst;
+lst.insertAfter(1st.end(), 20);
