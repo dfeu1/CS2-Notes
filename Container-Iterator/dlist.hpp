@@ -1,7 +1,7 @@
 #ifndef DLIST_CS2
 #define DLIST_CS2
 //////////////////////////////////////////////////
-// REQUIRES: assignable(T)
+//* REQUIRES: assignable(T)
 //
 //  data
 //
@@ -27,9 +27,9 @@ public:
 
 template <typename T> class List;
 /////////////////////////////////////////////////
-// Iterator for List.
-// CLASS INV: current == 0 || current->dnode<T>()
-// REQUIRES : assignable(T) && copyconstructable(T)
+//* Iterator for List.
+//* CLASS INV: current == 0 || current->dnode<T>()
+//* REQUIRES : assignable(T) && copyconstructable(T)
 template <typename T>
 class Itr {
 public:
@@ -61,11 +61,11 @@ public:
     T         operator* () const { return current->data };
     T&        operator* ()       { return current->data };
 
-    // Overloading ->
-    // Must be a method.
-    // Must return a pointer (or object of that class)
-    // cout << i->data;
-    // cout << (i.operator->())->data;
+    //* Overloading ->
+    //* Must be a method.
+    //* Must return a pointer (or object of that class)
+    //* cout << i->data;
+    //* cout << (i.operator->())->data;
     dnode<T>*operator-> () const { return current; };
     dnode<T>*operator-> ()       { return current; };
 
@@ -104,6 +104,7 @@ public:
     Itr<T>&        end() { return Itr<T>(ending);    };
     T&           front() { return beginning->data;   };
     T&            back() { return ending->data;      };
+    Itr<T>        find(const T& key) const;
 
 
     Itr<T>  operator[](int) const;
@@ -113,7 +114,7 @@ private:
     dnode<T> *beginning, *ending;
 };
 
-
+//////////////////////////////////////
 template <typename T>
 Itr<T> List<T>::operator[](int n) const {
     int counter = 0;
@@ -125,9 +126,9 @@ Itr<T> List<T>::operator[](int n) const {
     return result;
 }
 
-
+//////////////////////////////////////
 //* Ensures : RETVAL == Itr->dnode()[n] || Itr(0)
-//
+//* Requires: 
 template <typename T>
 Itr<T> List<T>::find(const T& key) const {
     Itr<T> result(beginning);
@@ -138,6 +139,7 @@ Itr<T> List<T>::find(const T& key) const {
     return Itr<T>(0);
 }
 
+//////////////////////////////////////
 template <typename T>
 int List<T>::length() const {
     int len = 0;
@@ -173,6 +175,29 @@ void List<T>::insertBefore(const T& item, Itr<T> ptr) {
     }
 }
 
+//////////////////////////////////////
+//* REQUIRES: ptr -> x2 && 
+//*           beginning -> x1 <-> x2 <-> ... <-> xN <- ending
+//* ENSURES : beg -> x1 <-> item <-> x2 <-> ... <-> xN <- ending
+template <typename T>
+void List<T>::insertAfter(const T& item, Itr<T> ptr) {
+    dnode<T> *temp = new dnode<T>(item);
+    if (ending == 0) {
+        ending = temp;
+        beginning = temp;
+    } else if (ptr == ending) {
+        ending->next = temp;
+        temp->prev = ending; //* or ptr.current ? both equal.
+        ending = ending->next;
+    } else {
+        temp->next = ptr->next;
+        temp->prev = ptr.current;
+        ptr->next->prev = temp;
+        ptr->next = temp;
+    }
+}
+
+
 ////////////////////////////////////////////////
 //* REQUIRES: !isEmpty() && ptr -> x2
 //*           beg -> x1 <-> x3 <-> ... <-> xN <- ending
@@ -181,7 +206,7 @@ void List<T>::insertBefore(const T& item, Itr<T> ptr) {
 template <typename T>
 void List<T>::remove(Itr<T> ptr) {
     if (ptr == beginning) {
-        beginning = ptr->next;
+        beginning = ptr->next;   //* beginning = beginning->next;
     }
     else {
         ptr->prev->next = ptr->next;
@@ -194,5 +219,59 @@ void List<T>::remove(Itr<T> ptr) {
     }
     delete ptr.current;
 }
+
+
+////////////////////////////////////////////////
+template <typename T>
+List<T>::~List() {
+    dnode<T>* temp;
+    while (beginning != 0) {
+        temp = beginning;
+        beginning = beginning->next;
+        delete temp;
+
+        //? Another Version - Taking advantage of what we already built
+        //* while (!isEmpty()) remove(begin());
+    }
+}
+
+////////////////////////////////////////////////
+//! Default constructor makes sure both beginning and ending are 0;
+template <typename T>
+List<T>::List(const List<T>& actual) : List<T>() {
+    Itr<T> temp(actual.beginning);
+    while (temp != 0) {
+        if (beginning == 0) {
+            beginning = new dnode<T>(temp->data);
+            ending    = beginning;
+        } else {
+            ending->next = new dnode<T>(temp->data);
+            ending->next->prev = ending;
+            ending = ending->next;
+        }
+        ++temp;  //? the iterator
+    }
+}
+
+///////////////////////////////////////////////
+//* Constant Time Swap no matter the size
+template <typename T>
+void List<T>::swap(List<T>& rhs) {
+    dnode<T> *temp = rhs.beginning;
+    rhs.beginning  = beginning;
+    beginning      = temp;
+
+    temp = rhs.ending;
+    rhs.ending = ending;
+    ending = temp;
+}
+
+
+
+///////////////////////////////////////////////
+//template <typename T>
+
+
+
 
 #endif
