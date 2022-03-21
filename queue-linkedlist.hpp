@@ -37,7 +37,7 @@ void queue<T>::enqueue(const T& item) {
         ending = ending->next;
     }
 }
-
+//
 //////////////////////////////////////////
 //* REQUIRES: beg -> x1 -> x2 -> ... -> xN <- ending && !isEmpty()
 //* ENSURES : beg -> x2 -> ... -> xN <- ending && RETVAL == x1

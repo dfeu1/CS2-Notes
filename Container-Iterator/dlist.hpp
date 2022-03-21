@@ -33,14 +33,39 @@ template <typename T> class List;
 template <typename T>
 class Itr {
 public:
-    Itr               () : current(0) {};
-    Itr               (dnode<T>* ptr) : current(ptr) {};
-    Itr<T>&   operator++()    { };  // pre  ++i
-    Itr<T>    operator++(int) { };  // post i++ dummy parameter
-    Itr<T>&   operator--()    { };  // pre --i
-    Itr<T>    operator--(int) { };  // post i-- dummy parameter
+    Itr                 () : current(0) {};
+    Itr                 (dnode<T>* ptr) : current(ptr) {};
+
+    Itr<T>&   operator++()       {  // pre  ++i
+                                    if(current) { current = current->next; } 
+                                    return *this; 
+                                 };  
+    Itr<T>    operator++(int)    {  // post i++ dummy parameter
+                                   Itr result(current);
+                                   if(current) { current = current->next; } 
+                                   return result; 
+                                 };  
+    Itr<T>&   operator--()       {  // pre --i
+                                   if (current) current = curent->prev;
+                                   return *this;
+                                 };  
+    Itr<T>    operator--(int)    {  // post i-- dummy parameter
+                                   Itr<T> original(current);
+                                   if (current) current = current->prev;
+                                   return original;
+                                 };  
+
+    bool      operator==(Itr<T> rhs) const { return current == rhs.current; }
+    bool      operator!=(Itr<T> rhs) const { return current != rhs.current; }
+
     T         operator* () const { return current->data };
     T&        operator* ()       { return current->data };
+
+    // Overloading ->
+    // Must be a method.
+    // Must return a pointer (or object of that class)
+    // cout << i->data;
+    // cout << (i.operator->())->data;
     dnode<T>*operator-> () const { return current; };
     dnode<T>*operator-> ()       { return current; };
 
@@ -51,11 +76,10 @@ private:
 };
 
 /////////////////////////////////////////////////
-// CLASS INV: (beginning == 0 && ending == 0) ||
-//             beginning -> X[0] <-> X[1] <-> ...
-//                  <-> X[length() - 1] <- ending
-// REQUIRES :
-//
+//* CLASS INV: (beginning == 0 && ending == 0) ||
+//*            beginning -> X[0] <-> X[1] <-> ...
+//*                  <-> X[length() - 1] <- ending
+//* REQUIRES :
 template<typename T>
 class List {
 public:
@@ -81,6 +105,7 @@ public:
     T&           front() { return beginning->data;   };
     T&            back() { return ending->data;      };
 
+
     Itr<T>  operator[](int) const;
     Itr<T>& operator[](int);
 
@@ -89,8 +114,85 @@ private:
 };
 
 
+template <typename T>
+Itr<T> List<T>::operator[](int n) const {
+    int counter = 0;
+    Itr<T> result(beginning);
+    while(counter != n) {
+        if (result == 0) break;
+        ++counter; ++result;
+    }
+    return result;
+}
 
 
+//* Ensures : RETVAL == Itr->dnode()[n] || Itr(0)
+//
+template <typename T>
+Itr<T> List<T>::find(const T& key) const {
+    Itr<T> result(beginning);
+    while(result != 0) {
+        if (*result == key) return result;
+        ++result;
+    }
+    return Itr<T>(0);
+}
 
+template <typename T>
+int List<T>::length() const {
+    int len = 0;
+    Itr<T> temp(beginning);
+    while (temp != 0) {
+        ++len; ++temp;
+    }
+    return len;
+}
+
+//////////////////////////////////////
+//* REQUIRES: ptr -> x2 && 
+//*           beginning -> x1 <-> x2 <-> ... <-> xN <- ending
+//* ENSURES : beg -> x1 <-> item <-> x2 <-> ... <-> xN <- ending
+template <typename T>
+void List<T>::insertBefore(const T& item, Itr<T> ptr) {
+    dnode<T>* temp = new dnode<T>(item);
+    if (beginning == 0) {        //? Empty List
+        beginning == temp;
+        ending = temp;
+    }
+
+    else if (ptr == beginning) { //? Insert before beginning
+        temp->next = beginning;
+        beginning->prev = temp;
+        beginning = temp;
+    }
+
+    else {                       //? General Case
+        temp->next = ptr.current;//temp->next = ptr.operator->();
+        temp->prev = ptr->prev;
+        ptr->prev->next = temp;
+    }
+}
+
+////////////////////////////////////////////////
+//* REQUIRES: !isEmpty() && ptr -> x2
+//*           beg -> x1 <-> x3 <-> ... <-> xN <- ending
+//* ENSURES : beg -> x1 <-> x3 <-> ... <-> xN <- ending
+//*           ptr -> x2
+template <typename T>
+void List<T>::remove(Itr<T> ptr) {
+    if (ptr == beginning) {
+        beginning = ptr->next;
+    }
+    else {
+        ptr->prev->next = ptr->next;
+    }
+    if (ptr == ending) {
+        ending = ptr->prev;
+    }
+    else {
+        ptr->next->prev = ptr->prev;
+    }
+    delete ptr.current;
+}
 
 #endif
