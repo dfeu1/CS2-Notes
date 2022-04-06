@@ -1,0 +1,25 @@
+
+Deleting nodes in a tree is a bit more complex than adding or simply traversing.
+    - must replace this node that needs to be deleted with the predecesing node.
+        - this predecesor will be a leaf, or have a left subtree.
+
+Either
+    Delete 1 Child
+    Delete 2 Child or
+    Delete a Leaf (no children)
+
+Predecessor
+    - Search in the left subtree of the node for right most node
+    - Will be a leaf, or have a left subtree
+
+    int predecessor() {
+        if (right) return right-> predecessor();
+        return data;
+    }
+
+Implementation:
+    - 
+    -
+    -
+    -
+    -
